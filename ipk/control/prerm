@@ -1,0 +1,5 @@
+#!/bin/sh
+[ -s ${IPKG_INSTROOT}/lib/functions.sh ] || exit 0
+. ${IPKG_INSTROOT}/lib/functions.sh
+rm -f /usr/sbin/tailscale
+default_prerm $0 $@
