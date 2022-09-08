@@ -22,7 +22,7 @@ fi
 
 code="tailscale"
 ipk_work_base="ipk-work"
-output="packages"
+output="packages/19.07"
 
 # pushd and popd silent
 pushd() { builtin pushd $1 > /dev/null; }
@@ -118,8 +118,10 @@ makePackage() {
     cp -r "$SCRIPT_DIR/ipk/" "$ipk_work"
     mkdir -p "$output"
 
-    #tar_options="--numeric-owner --gid=0 --uid=0" # for mac
-    tar_options="--numeric-owner"
+    tar_options="--numeric-owner --owner=0 --group=0"
+    if [[ $OSTYPE == 'darwin'* ]]; then
+        tar_options="--numeric-owner --gid=0 --uid=0"
+    fi
 
     # data
     mkdir -p "$ipk_work/data/usr/sbin"
@@ -135,8 +137,9 @@ makePackage() {
     popd
 
     # package
+    pkg_out="$(pwd)/$output"
     pushd "$ipk_work/"
-    tar  $tar_options -czf "../../$output/tailscale_${version}_${arch}.ipk" ./debian-binary ./data.tar.gz ./control.tar.gz 
+    tar  $tar_options -czf "$pkg_out/tailscale_${version}_${arch}.ipk" ./debian-binary ./data.tar.gz ./control.tar.gz 
     popd
     echo "created tailscale_${version}_${arch}.ipk"
 }
@@ -147,9 +150,10 @@ updateRepo() {
     if [ ! -d "opkg-utils" ]; then
         git clone --depth 1 "git://git.yoctoproject.org/opkg-utils"
     fi
+    utils_dir="$(pwd)/opkg-utils"
     pushd "$output"
     rm -f Packages Packages.gz
-    "../opkg-utils/opkg-make-index" -a -f -v --checksum sha256 -v . > Packages
+    "$utils_dir/opkg-make-index" -a -f -v --checksum sha256 -v . > Packages
     echo "===== Repo Packages ====="
     cat Packages
     echo "========================"

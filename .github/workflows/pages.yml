@@ -51,7 +51,7 @@ jobs:
         run: |
           cp -r ./html ./gh_pages
           mv ./packages/ gh_pages/packages/
-          ./tools/gen_directory_listing.sh ./gh_pages/packages/
+          ./tools/gen_directory_listing.sh ./gh_pages/packages/19.07/
       
       # TODO only deploy if new version
 
