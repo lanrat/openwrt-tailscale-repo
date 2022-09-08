@@ -37,12 +37,13 @@ genHTML() {
     i=0
     genHTMLTop
     # only list files
+    echo "<a href=\"..\">Back</a>"
     echo "<table>"
     echo "<thead><tr><th>File</th><th>Size</th><th>Date</th></tr></thead>"
     echo "<tbody>"
     for i in $(find "$ROOT" ! -iname "index.html" -maxdepth 1 -mindepth 1 -type f | sort); do
         file="$(basename "$i")"
-        size="$(du -Ah  "$i" | cut -f1)"
+        size="$(du --apparent-size -h  "$i" | cut -f1)"
         fdate="$(date -r "$i" "+%m-%d-%Y %H:%M:%S")"
         echo "    <tr><td><a href=\"$file\">$file</a></td><td>$size</td><td>$fdate</td></tr>"
     done
