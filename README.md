@@ -1,12 +1,12 @@
 # Tailscale IPK Builder
 
-Builds tailscale combined ipk packages for open-wrt
+Builds Tailscale combined ipk packages for open-wrt
 
 ## Building
 
-Edit build.sh and set the `arch` and `branch` variables if needed.
+Edit build.sh and set the `ARCH` and `BRANCH` variables if needed.
 
-Run `buil.sh`
+Run `build.sh`
 
 An ipk file is generated!
 
