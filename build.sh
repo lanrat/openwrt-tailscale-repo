@@ -83,7 +83,7 @@ build() {
 buildGoCombined() {
     echo "===== Building binary for ${arch} ====="
     pushd "$code"
-    GOOS=linux GOARCH=$arch go build -o tailscale.${arch}.combined -tags ts_include_cli ./cmd/tailscaled
+    GOOS=linux GOARCH="$arch" go build -o "tailscale.${arch}.combined" -tags ts_include_cli -ldflags="-s -w" ./cmd/tailscaled
     popd
 }
 
