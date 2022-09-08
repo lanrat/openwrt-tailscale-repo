@@ -1,4 +1,4 @@
-# [Tailscale Builder for OpenWRT](https://lanrat.github.io/openwrt-tailscale-rep)
+# [Tailscale Builder for OpenWRT](https://lanrat.github.io/openwrt-tailscale-repo)
 
 Builds Tailscale combined ipk packages for OpenWRT.
 
