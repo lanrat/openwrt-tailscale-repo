@@ -61,5 +61,5 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./gh_pages
-          #keep_files: true # does not delete old files
+          force_orphan: true # do not keep history
       
