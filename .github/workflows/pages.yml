@@ -45,13 +45,13 @@ jobs:
       - name: Build IPK files
         run: ./build.sh
       
-      # - name: Deploy
-      #   uses: peaceiris/actions-gh-pages@v3
-      #   if: ${{ github.ref == 'refs/heads/main' }}
-      #   with:
-      #     github_token: ${{ secrets.GITHUB_TOKEN }}
-      #     publish_dir: ./repo
-      #     keep_files: true # does not delete old files
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        if: ${{ github.ref == 'refs/heads/main' }}
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./repo
+          keep_files: true # does not delete old files
       
       # - name: Upload artifact
       #   uses: actions/upload-pages-artifact@v1
