@@ -97,21 +97,25 @@ makePackage() {
     cp -r "$SCRIPT_DIR/ipk/" "$ipk_work"
     mkdir -p "$output"
 
+    tar_options="--numeric-owner --gid=0 --uid=0"
+    tar_options="--numeric-owner"
+
     # data
+    mkdir -p "$ipk_work/data/usr/sbin"
     cp "$code/tailscale.${arch}.combined" "$ipk_work/data/usr/sbin/tailscaled"
     pushd "$ipk_work/data/"
-    tar --numeric-owner --gid=0 --uid=0 -czf "../data.tar.gz" ./*
+    tar $tar_options -czf "../data.tar.gz" ./*
     popd
 
     # control
     makeControl > "$ipk_work/control/control"
     pushd "$ipk_work/control/"
-    tar --numeric-owner --gid=0 --uid=0 -czf "../control.tar.gz" ./*
+    tar  $tar_options -czf "../control.tar.gz" ./*
     popd
 
     # package
     pushd "$ipk_work/"
-    tar --numeric-owner --gid=0 --uid=0 -cf "../../$output/tailscale_${version}_${arch}.ipk" ./debian-binary ./data.tar.gz ./control.tar.gz 
+    tar  $tar_options -cf "../../$output/tailscale_${version}_${arch}.ipk" ./debian-binary ./data.tar.gz ./control.tar.gz 
     popd
     echo "created tailscale_${version}_${arch}.ipk"
 }
@@ -128,7 +132,7 @@ updateRepo() {
     echo "===== Repo Packages ====="
     cat Packages
     echo "========================"
-    gzip "Packages"
+    gzip --keep Packages
     popd
 }
 
