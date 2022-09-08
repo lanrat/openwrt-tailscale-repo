@@ -1,5 +1,5 @@
 *.ipk
 tailscale/
 ipk-work/
-repo/
+packages/
 opkg-utils/

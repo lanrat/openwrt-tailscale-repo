@@ -45,12 +45,18 @@ jobs:
       - name: Build IPK files
         run: ./build.sh
       
+      - name: Prep GH Pages Directory
+        run: |
+          cp -r ./html ./gh_pages
+          mv ./packages/ gh_pages/packages/
+          ./tools/gen_directory_listing.sh ./gh_pages/packages/
+      
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         if: ${{ github.ref == 'refs/heads/main' }}
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./repo
+          publish_dir: ./gh_pages
           keep_files: true # does not delete old files
       
       # - name: Upload artifact

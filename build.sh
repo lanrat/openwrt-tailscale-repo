@@ -6,9 +6,13 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 # comma separeted
 #ARCH=mips,mips64,arm,arm64,mips64le,mipsle
-ARCH=mips
+DEFAULT_ARCH=mips
+
 #BRANCH=v1.30.0
 #BRANCH=v1.28.0
+
+: "${ARCH:=$DEFAULT_ARCH}"
+: "${BRANCH:=}"
 
 if [ -z "$BRANCH" ]; then
     echo "Branch unset, checking for latest release..."
@@ -18,7 +22,7 @@ fi
 
 code="tailscale"
 ipk_work_base="ipk-work"
-output="repo"
+output="packages"
 
 # pushd and popd silent
 pushd() { builtin pushd $1 > /dev/null; }
@@ -129,7 +133,7 @@ updateRepo() {
     fi
     pushd "$output"
     rm -f Packages Packages.gz
-    "../opkg-utils/opkg-make-index" -a -f --checksum md5 -v . > Packages
+    "../opkg-utils/opkg-make-index" -a -f -v --checksum sha256 -v . > Packages
     echo "===== Repo Packages ====="
     cat Packages
     echo "========================"

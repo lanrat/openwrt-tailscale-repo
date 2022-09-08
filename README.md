@@ -1,11 +1,14 @@
 # Tailscale IPK Builder
 
-Builds Tailscale combined ipk packages for open-wrt
+Builds Tailscale combined ipk packages for open-wrt.
+
+https://lanrat.github.io/openwrt-tailscale-repo/
+
 
 ## Building
 
-Edit build.sh and update the `ARCH` and `BRANCH` variables if needed.
+Run `build.sh`.
 
-Run `build.sh`
+Optionally set `ARCH` and/or `BRANCH` to override the default architecture and version to build
 
-ipk files are generated in `repo/`!
+ipk files are generated in `packages/`!
