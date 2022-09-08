@@ -53,20 +53,13 @@ jobs:
           mv ./packages/ gh_pages/packages/
           ./tools/gen_directory_listing.sh ./gh_pages/packages/
       
+      # TODO only deploy if new version
+
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         if: ${{ github.ref == 'refs/heads/main' }}
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./gh_pages
-          keep_files: true # does not delete old files
+          #keep_files: true # does not delete old files
       
-      # - name: Upload artifact
-      #   uses: actions/upload-pages-artifact@v1
-      #   with:
-      #     # Upload entire repository
-      #     path: '.'
-      
-      # - name: Deploy to GitHub Pages
-      #   id: deployment
-      #   uses: actions/deploy-pages@v1
