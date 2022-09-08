@@ -5,7 +5,8 @@ set -e
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 # comma separeted
-ARCH=mips,mips64,arm,arm64,mips64le,mipsle
+#ARCH=mips,mips64,arm,arm64,mips64le,mipsle
+ARCH=mips
 #BRANCH=v1.30.0
 #BRANCH=v1.28.0
 
