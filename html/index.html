@@ -4,21 +4,64 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css">
-    <title>Openwrt Tailscale Repo</title>
+    <title>Openwrt Tailscale</title>
 </head>
 <body>
   <header>
-    <h1>Openwrt Tailscale Repo</h1>
-    <p>OPKG repository for Tailscale</p>
+    <h1>OpenWRT Tailscale Repository</h1>
+    <p>Opkg feed for Tailscale</p>
   </header>
 
   <main>
-    <p>WIP</p>
-    <p>See <a href="packages/19.07/">19.07 Packages</a></p>
+    <h3>Tailscale packages</h3>
+    <p>Backport of the latest <a target="_blank" href="https://tailscale.com/">Tailscale</a> to OpenWRT 19.07.</p>
+
+    <p>These builds are build as <a target="_blank" href="https://tailscale.com/kb/1207/small-tailscale/">combined binaries</a> to reduce disk space needed.</p>
+
+    <h4>Browse</h4>
+    <ul>
+        <li><a href="packages/19.07/">19.07 Packages</a></li>
+    </ul>
+
+    <h3>Installation</h3>
+
+    <p>Add this repository feed by following the instructions below or manually download and install the correct ipk file from the above link.</p>
+
+    <p><strong>NOTE:</strong> It is normal for the installation to give an error about a failed log upload after finishing.</p>
+
+    <h4>Web UI</h4>
+
+    <p>Navigate to System -> Software</p>
+    <p>Add the following feed to <code>/etc/opkg/customfeeds.conf</code></p>
+    <pre><code>src/gz openwrt-tailscale https://lanrat.github.io/openwrt-tailscale-repo/packages/19.07</code></pre>
+
+    <p>Update the feeds</p>
+
+    <p>Search for tailscale, and install it.</p>
+
+    <h4>CLI</h4>
+<pre><code>echo "src/gz openwrt-tailscale https://lanrat.github.io/openwrt-tailscale-repo/packages/19.07" >> "/etc/opkg/customfeeds.conf"
+opkg update
+opkg install tailscale</code></pre>
+
+
+    <h3>Configuration</h3>
+
+    <p>After installation tailscaled should already be running and waiting for you to login and configure it.</p>
+
+    <p>For example:</p>
+
+    <pre><code>tailscale up --accept-dns=false --advertise-routes=10.0.0.0/24 --advertise-exit-node</code></pre>
+
+
+    <h3>What about OpenWRT 21.02+?</h3>
+
+    <p>Tailscale is already in the <a target="_blank" href="https://openwrt.org/packages/pkgdata/tailscale">default feeds</a> for newer versions of OpenWRT.</p>
+
   </main>
 
   <footer>
-    <p><a href="https://github.com/lanrat/openwrt-tailscale-repo">Source on Github</a></p>
+    <p><a target="_blank" href="https://github.com/lanrat/openwrt-tailscale-repo">Source on Github</a></p>
   </footer>
 </body>
 </html>
