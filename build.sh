@@ -6,9 +6,14 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 # comma separeted
 ARCH=mips,mips64,arm,arm64,mips64le,mipsle
-BRANCH=v1.30.0
+#BRANCH=v1.30.0
 #BRANCH=v1.28.0
 
+if [ -z "$BRANCH" ]; then
+    echo "Branch unset, checking for latest release..."
+    BRANCH="$(curl -s https://api.github.com/repos/tailscale/tailscale/releases/latest  | grep tag_name | cut -d \" -f4)"
+    echo "Latest release is $BRANCH"
+fi
 
 code="tailscale"
 ipk_work_base="ipk-work"
@@ -50,7 +55,7 @@ build() {
     do
         echo "Building for $arch"
         rm -rf "$ipk_work_base/$arch/"
-        export ipk_work="$ipk_work_base/$arch/"
+        ipk_work="$ipk_work_base/$arch/"
         buildGoCombined
         makePackage
     done

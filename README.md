@@ -4,10 +4,8 @@ Builds Tailscale combined ipk packages for open-wrt
 
 ## Building
 
-Edit build.sh and set the `ARCH` and `BRANCH` variables if needed.
+Edit build.sh and update the `ARCH` and `BRANCH` variables if needed.
 
 Run `build.sh`
 
-An ipk file is generated!
-
-
+ipk files are generated in `repo/`!
