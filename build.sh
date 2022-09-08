@@ -43,6 +43,21 @@ cleanAll() {
     clean
 }
 
+
+# map golang arch to opkg arch
+opkgArch() {
+    goArch="$1"
+    if [ -z "$goArch" ]; then
+        return
+    fi
+    declare -A archMap=( \
+        ["mips"]="mips_24kc" \
+        )
+    echo "${archMap["${goArch}"]:-${goArch}}"
+
+}
+
+
 getSource() {
     echo "===== Cloning source for $BRANCH ====="
     if [ ! -d "$code" ]; then
@@ -74,7 +89,8 @@ buildGoCombined() {
 }
 
 makeControl() {
-    echo "===== Building Control for ${arch} ====="
+    opkg_arch="$(opkgArch "$arch")"
+    #echo "===== Building Control for ${opkg_arch} ====="
     version="$(cat $code/VERSION.txt)"
     sourceDateEpoch="$(git -C $code show -s --format=%ct)"
     size="$(wc -c <"$ipk_work/data.tar.gz")"
@@ -91,7 +107,7 @@ makeControl() {
     echo "Section: net"
     echo "SourceDateEpoch: $sourceDateEpoch"
     #echo "Maintainer: NAME <EMAIL>"
-    echo "Architecture: $arch"
+    echo "Architecture: $opkg_arch"
     echo "Installed-Size:$size"
     echo "Description: It creates a secure network between your servers, computers, and cloud instances. Even when separated by firewalls or subnets. This package combines both the tailscaled daemon and tailscale CLI utility in a single combined (multicall) executable."
 }
@@ -102,7 +118,7 @@ makePackage() {
     cp -r "$SCRIPT_DIR/ipk/" "$ipk_work"
     mkdir -p "$output"
 
-    tar_options="--numeric-owner --gid=0 --uid=0"
+    #tar_options="--numeric-owner --gid=0 --uid=0" # for mac
     tar_options="--numeric-owner"
 
     # data
@@ -120,7 +136,7 @@ makePackage() {
 
     # package
     pushd "$ipk_work/"
-    tar  $tar_options -cf "../../$output/tailscale_${version}_${arch}.ipk" ./debian-binary ./data.tar.gz ./control.tar.gz 
+    tar  $tar_options -czf "../../$output/tailscale_${version}_${arch}.ipk" ./debian-binary ./data.tar.gz ./control.tar.gz 
     popd
     echo "created tailscale_${version}_${arch}.ipk"
 }
