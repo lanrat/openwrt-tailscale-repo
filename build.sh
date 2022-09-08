@@ -54,7 +54,6 @@ opkgArch() {
         ["mips"]="mips_24kc" \
         )
     echo "${archMap["${goArch}"]:-${goArch}}"
-
 }
 
 
@@ -63,7 +62,7 @@ getSource() {
     if [ ! -d "$code" ]; then
         git clone --depth 1 "https://github.com/tailscale/tailscale.git" -c advice.detachedHead=false --branch "$BRANCH" "$code/"
     else
-        #git -C "$code" pull --tags
+        git -C "$code" fetch --depth=1 --tags
         git -C "$code" checkout "$BRANCH"
     fi
 }
@@ -89,9 +88,6 @@ buildGoCombined() {
 }
 
 makeControl() {
-    opkg_arch="$(opkgArch "$arch")"
-    #echo "===== Building Control for ${opkg_arch} ====="
-    version="$(cat $code/VERSION.txt)"
     sourceDateEpoch="$(git -C $code show -s --format=%ct)"
     size="$(wc -c <"$ipk_work/data.tar.gz")"
 
@@ -114,7 +110,8 @@ makeControl() {
 
 makePackage() {
     version="$(cat $code/VERSION.txt)"
-    echo "===== Building Package for ${arch} $version ====="
+    opkg_arch="$(opkgArch "$arch")"
+    echo "===== Building Package for $version $arch ($opkg_arch) ====="
     cp -r "$SCRIPT_DIR/ipk/" "$ipk_work"
     mkdir -p "$output"
 
@@ -138,10 +135,11 @@ makePackage() {
 
     # package
     pkg_out="$(pwd)/$output"
+    pkg_file="tailscale_${version}_${opkg_arch}.ipk"
     pushd "$ipk_work/"
-    tar  $tar_options -czf "$pkg_out/tailscale_${version}_${arch}.ipk" ./debian-binary ./data.tar.gz ./control.tar.gz 
+    tar  $tar_options -czf "$pkg_out/$pkg_file" ./debian-binary ./data.tar.gz ./control.tar.gz 
     popd
-    echo "created tailscale_${version}_${arch}.ipk"
+    echo "created $pkg_file"
 }
 
 
