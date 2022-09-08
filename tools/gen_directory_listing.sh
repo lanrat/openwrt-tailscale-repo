@@ -60,11 +60,11 @@ genHTMLTop() {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css">
-    <title>OpenWRT Tailscale</title>
+    <title>OpenWrt Tailscale</title>
 </head>
 <body>
   <header>
-    <h1>OpenWRT Tailscale Repository</h1>
+    <h1>OpenWrt Tailscale Repository</h1>
     <p>Opkg feed for Tailscale</p>
   </header>
 
