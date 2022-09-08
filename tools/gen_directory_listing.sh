@@ -37,7 +37,7 @@ genHTML() {
     i=0
     genHTMLTop
     # only list files
-    echo "<a href=\"..\">Back</a>"
+    echo "<a href=\"../../\">Back</a>"
     echo "<table>"
     echo "<thead><tr><th>File</th><th>Size</th><th>Date</th></tr></thead>"
     echo "<tbody>"
