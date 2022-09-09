@@ -6,7 +6,7 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 # comma separeted
 #ARCH=mips,mips64,arm,arm64,mips64le,mipsle
-DEFAULT_ARCH=mips
+DEFAULT_ARCH=mips,mipsle,arm,arm64
 
 #BRANCH=v1.30.0
 #BRANCH=v1.28.0
@@ -28,7 +28,6 @@ output="packages/19.07"
 pushd() { builtin pushd $1 > /dev/null; }
 popd() { builtin popd $1 > /dev/null; }
 
-
 clean() {
     echo "===== Cleaning env ====="
     rm -f "$code/tailscale.*.combined"
@@ -43,7 +42,6 @@ cleanAll() {
     clean
 }
 
-
 # map golang arch to opkg arch
 opkgArch() {
     goArch="$1"
@@ -52,19 +50,29 @@ opkgArch() {
     fi
     declare -A archMap=( \
         ["mips"]="mips_24kc" \
+        ["mipsle"]="mipsel_24kc" \
+        ["arm"]="arm_cortex-a7" \
+        ["arm64"]="aarch64_generic" \
         )
     echo "${archMap["${goArch}"]:-${goArch}}"
 }
-
 
 getSource() {
     echo "===== Cloning source for $BRANCH ====="
     if [ ! -d "$code" ]; then
         git clone --depth 1 "https://github.com/tailscale/tailscale.git" -c advice.detachedHead=false --branch "$BRANCH" "$code/"
     else
+        git -C "$code" checkout .
         git -C "$code" fetch --depth=1 --tags
         git -C "$code" checkout "$BRANCH"
     fi
+    patchSource
+}
+
+# patch tailscale to not conflict with mwan3
+# https://github.com/tailscale/tailscale/issues/3659
+patchSource() {
+    grep -lrP '\b52[1357]0\b' "$code" | xargs --no-run-if-empty -n1 sed -Ei 's/\b52([1357])0\b/13\10/g'
 }
 
 build() {
@@ -141,7 +149,6 @@ makePackage() {
     popd
     echo "created $pkg_file"
 }
-
 
 updateRepo() {
     echo "===== UPDATING REPO ====="
