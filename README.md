@@ -2,7 +2,6 @@
 
 Builds Tailscale combined ipk packages for OpenWrt.
 
-
 For information on how to use this, see: [lanrat.github.io/openwrt-tailscale-repo](https://lanrat.github.io/openwrt-tailscale-repo).
 
 
