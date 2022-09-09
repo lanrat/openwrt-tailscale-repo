@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
 set -e
+set -uo pipefail
+trap 's=$?; echo ": Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
 #set -x
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
 
 # comma separeted
 #ARCH=mips,mips64,arm,arm64,mips64le,mipsle
@@ -25,8 +28,8 @@ ipk_work_base="ipk-work"
 output="packages/19.07"
 
 # pushd and popd silent
-pushd() { builtin pushd $1 > /dev/null; }
-popd() { builtin popd $1 > /dev/null; }
+pushd() { builtin pushd "$1" > /dev/null; }
+popd() { builtin popd > /dev/null; }
 
 clean() {
     echo "===== Cleaning env ====="
@@ -72,7 +75,9 @@ getSource() {
 # patch tailscale to not conflict with mwan3
 # https://github.com/tailscale/tailscale/issues/3659
 patchSource() {
-    grep -lrP '\b52[1357]0\b' "$code" | xargs --no-run-if-empty -n1 sed -Ei 's/\b52([1357])0\b/13\10/g'
+    echo "===== Patching Source ====="
+    # grep -lrP '\b52[1357]0\b' "$code" | xargs -n1 sed -Ei 's/\b52([1357])0\b/13\10/g'
+    git -C "$code" apply --numstat "$SCRIPT_DIR/route_mwan3.patch"
 }
 
 build() {

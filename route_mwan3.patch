@@ -1,0 +1,94 @@
+diff --git a/wgengine/monitor/monitor.go b/wgengine/monitor/monitor.go
+index ba09919..9aba656 100644
+--- a/wgengine/monitor/monitor.go
++++ b/wgengine/monitor/monitor.go
+@@ -158,7 +158,7 @@ func (m *Mon) RegisterChangeCallback(callback ChangeFunc) (unregister func()) {
+ // RuleDeleteCallback is a callback when a Linux IP policy routing
+ // rule is deleted. The table is the table number (52, 253, 354) and
+ // priority is the priority order number (for Tailscale rules
+-// currently: 5210, 5230, 5250, 5270)
++// currently: 1310, 1330, 1350, 1370)
+ type RuleDeleteCallback func(table uint8, priority uint32)
+ 
+ // RegisterRuleDeleteCallback adds callback to the set of parties to be
+diff --git a/wgengine/monitor/monitor_linux.go b/wgengine/monitor/monitor_linux.go
+index 07e3236..2f15a6b 100644
+--- a/wgengine/monitor/monitor_linux.go
++++ b/wgengine/monitor/monitor_linux.go
+@@ -218,8 +218,8 @@ func (c *nlConn) Receive() (message, error) {
+ 			c.logf("ip rule deleted; failed to parse netlink message: %v", err)
+ 		} else {
+ 			c.logf("ip rule deleted: %+v", rmsg)
+-			// On `ip -4 rule del pref 5210 table main`, logs:
+-			// monitor: ip rule deleted: {Family:2 DstLength:0 SrcLength:0 Tos:0 Table:254 Protocol:0 Scope:0 Type:1 Flags:0 Attributes:{Dst:<nil> Src:<nil> Gateway:<nil> OutIface:0 Priority:5210 Table:254 Mark:4294967295 Expires:<nil> Metrics:<nil> Multipath:[]}}
++			// On `ip -4 rule del pref 1310 table main`, logs:
++			// monitor: ip rule deleted: {Family:2 DstLength:0 SrcLength:0 Tos:0 Table:254 Protocol:0 Scope:0 Type:1 Flags:0 Attributes:{Dst:<nil> Src:<nil> Gateway:<nil> OutIface:0 Priority:1310 Table:254 Mark:4294967295 Expires:<nil> Metrics:<nil> Multipath:[]}}
+ 		}
+ 		rdm := ipRuleDeletedMessage{
+ 			table:    rmsg.Table,
+diff --git a/wgengine/router/router_linux.go b/wgengine/router/router_linux.go
+index 3a95c00..90a00c6 100644
+--- a/wgengine/router/router_linux.go
++++ b/wgengine/router/router_linux.go
+@@ -886,14 +886,14 @@ func mustRouteTable(num int) routeTable {
+ 	// Packets from us, tagged with our fwmark, first try the kernel's
+ 	// main routing table.
+ 	{
+-		Priority: 5210,
++		Priority: 1310,
+ 		Mark:     tailscaleBypassMarkNum,
+ 		Table:    mainRouteTable.num,
+ 	},
+ 	// ...and then we try the 'default' table, for correctness,
+ 	// even though it's been empty on every Linux system I've ever seen.
+ 	{
+-		Priority: 5230,
++		Priority: 1330,
+ 		Mark:     tailscaleBypassMarkNum,
+ 		Table:    defaultRouteTable.num,
+ 	},
+@@ -901,7 +901,7 @@ func mustRouteTable(num int) routeTable {
+ 	// then packets from us should be aborted rather than falling through
+ 	// to the tailscale routes, because that would create routing loops.
+ 	{
+-		Priority: 5250,
++		Priority: 1350,
+ 		Mark:     tailscaleBypassMarkNum,
+ 		Type:     unix.RTN_UNREACHABLE,
+ 	},
+@@ -911,7 +911,7 @@ func mustRouteTable(num int) routeTable {
+ 	// it takes precedence over all the others, ie. VPN routes always
+ 	// beat non-VPN routes.
+ 	{
+-		Priority: 5270,
++		Priority: 1370,
+ 		Table:    tailscaleRouteTable.num,
+ 	},
+ 	// If that didn't match, then non-fwmark packets fall through to the
+diff --git a/wgengine/router/router_linux_test.go b/wgengine/router/router_linux_test.go
+index 0119131..5bf90bc 100644
+--- a/wgengine/router/router_linux_test.go
++++ b/wgengine/router/router_linux_test.go
+@@ -25,14 +25,14 @@
+ 
+ func TestRouterStates(t *testing.T) {
+ 	basic := `
+-ip rule add -4 pref 5210 fwmark 0x80000 table main
+-ip rule add -4 pref 5230 fwmark 0x80000 table default
+-ip rule add -4 pref 5250 fwmark 0x80000 type unreachable
+-ip rule add -4 pref 5270 table 52
+-ip rule add -6 pref 5210 fwmark 0x80000 table main
+-ip rule add -6 pref 5230 fwmark 0x80000 table default
+-ip rule add -6 pref 5250 fwmark 0x80000 type unreachable
+-ip rule add -6 pref 5270 table 52
++ip rule add -4 pref 1310 fwmark 0x80000 table main
++ip rule add -4 pref 1330 fwmark 0x80000 table default
++ip rule add -4 pref 1350 fwmark 0x80000 type unreachable
++ip rule add -4 pref 1370 table 52
++ip rule add -6 pref 1310 fwmark 0x80000 table main
++ip rule add -6 pref 1330 fwmark 0x80000 table default
++ip rule add -6 pref 1350 fwmark 0x80000 type unreachable
++ip rule add -6 pref 1370 table 52
+ `
+ 	states := []struct {
+ 		name string
