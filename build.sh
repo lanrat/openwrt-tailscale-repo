@@ -2,7 +2,7 @@
 set -e
 set -uo pipefail
 trap 's=$?; echo ": Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
-set -x
+#set -x
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
