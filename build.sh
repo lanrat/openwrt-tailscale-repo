@@ -4,19 +4,15 @@ set -uo pipefail
 trap 's=$?; echo ": Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
 #set -x
 
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-
-
 # comma separeted
-#ARCH=mips,mips64,arm,arm64,mips64le,mipsle
 DEFAULT_ARCH=mips,mipsle,arm,arm64
-
-#BRANCH=v1.30.0
-#BRANCH=v1.28.0
 
 : "${ARCH:=$DEFAULT_ARCH}"
 : "${BRANCH:=}"
 : "${PATCH:=true}"
+
+
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 if [ -z "$BRANCH" ]; then
     echo "Branch unset, checking for latest release..."
