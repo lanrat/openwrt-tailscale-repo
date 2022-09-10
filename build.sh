@@ -2,7 +2,7 @@
 set -e
 set -uo pipefail
 trap 's=$?; echo ": Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
-#set -x
+set -x
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
@@ -16,6 +16,7 @@ DEFAULT_ARCH=mips,mipsle,arm,arm64
 
 : "${ARCH:=$DEFAULT_ARCH}"
 : "${BRANCH:=}"
+: "${PATCH:=true}"
 
 if [ -z "$BRANCH" ]; then
     echo "Branch unset, checking for latest release..."
@@ -34,7 +35,6 @@ popd() { builtin popd > /dev/null; }
 clean() {
     echo "===== Cleaning env ====="
     rm -f "$code/tailscale.*.combined"
-    #rm -rf "$code"
     rm -rf "$ipk_work_base"
 }
 
@@ -62,14 +62,17 @@ opkgArch() {
 
 getSource() {
     echo "===== Cloning source for $BRANCH ====="
-    if [ ! -d "$code" ]; then
-        git clone --depth 1 "https://github.com/tailscale/tailscale.git" -c advice.detachedHead=false --branch "$BRANCH" "$code/"
-    else
-        git -C "$code" checkout .
-        git -C "$code" fetch --depth=1 --tags
-        git -C "$code" checkout "$BRANCH"
+    if [ -d "$code" ]; then
+        rm -rf "$code"
     fi
-    patchSource
+    git clone --depth 1 "https://github.com/tailscale/tailscale.git" -c advice.detachedHead=false --branch "$BRANCH" "$code/"
+    # git -C "$code" checkout .
+    # git -C "$code" pull --tags
+    # git -C "$code" checkout "$BRANCH"
+
+    if [ "$PATCH" = true ] ; then
+        patchSource
+    fi
 }
 
 # patch tailscale to not conflict with mwan3
@@ -118,7 +121,7 @@ makeControl() {
     #echo "Maintainer: NAME <EMAIL>"
     echo "Architecture: $opkg_arch"
     echo "Installed-Size:$size"
-    echo "Description: It creates a secure network between your servers, computers, and cloud instances. Even when separated by firewalls or subnets. This package combines both the tailscaled daemon and tailscale CLI utility in a single combined (multicall) executable."
+    echo "Description: Creates a secure network between your servers, computers, and cloud instances. Even when separated by firewalls or subnets. This package combines both the tailscaled daemon and tailscale CLI utility in a single combined (multicall) executable."
 }
 
 makePackage() {
