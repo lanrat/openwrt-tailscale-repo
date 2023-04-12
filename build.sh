@@ -26,7 +26,9 @@ code="tailscale"
 ipk_work_base="ipk-work"
 output="packages/19.07"
 
-current_version="$(curl -s --fail "$current_version_url" || echo '0.0.0')"
+current_version="$(curl -s --fail "$current_version_url" || echo 'v0.0.0')"
+current_version="${current_version:1}" # remove leading v
+
 
 # semver comparison
 # source: https://stackoverflow.com/questions/4023830/how-to-compare-two-strings-in-dot-separated-version-format-in-bash
@@ -209,13 +211,13 @@ updateRepo() {
 }
 
 # check if there is a new version
-new_version="${BRANCH:1}"
+new_version="${BRANCH:1}" # remove leading v
 comp=0
 vercomp "$new_version" "$current_version" || comp=$?
 if [ $comp -eq 1 ]; then
     echo "Upgrading from $current_version -> $new_version"
 else
-    echo "current version $current_version is already newer than latest version: $new_version"
+    echo "current version $current_version is already >= than latest version: $new_version"
     exit 0;
 fi
 
