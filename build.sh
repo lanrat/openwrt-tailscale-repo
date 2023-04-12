@@ -20,9 +20,46 @@ if [ -z "$BRANCH" ]; then
     echo "Latest release is $BRANCH"
 fi
 
+
+current_version_url='https://lanrat.github.io/openwrt-tailscale-repo/packages/19.07/version.txt'
 code="tailscale"
 ipk_work_base="ipk-work"
 output="packages/19.07"
+
+current_version="$(curl -s --fail "$current_version_url" || echo '0.0.0')"
+
+# semver comparison
+# source: https://stackoverflow.com/questions/4023830/how-to-compare-two-strings-in-dot-separated-version-format-in-bash
+vercomp () {
+    if [[ $1 == $2 ]]
+    then
+        return 0
+    fi
+    local IFS=.
+    local i ver1=($1) ver2=($2)
+    # fill empty fields in ver1 with zeros
+    for ((i=${#ver1[@]}; i<${#ver2[@]}; i++))
+    do
+        ver1[i]=0
+    done
+    for ((i=0; i<${#ver1[@]}; i++))
+    do
+        if [[ -z ${ver2[i]} ]]
+        then
+            # fill empty fields in ver2 with zeros
+            ver2[i]=0
+        fi
+        if ((10#${ver1[i]} > 10#${ver2[i]}))
+        then
+            return 1
+        fi
+        if ((10#${ver1[i]} < 10#${ver2[i]}))
+        then
+            return 2
+        fi
+    done
+    return 0
+}
 
 # pushd and popd silent
 pushd() { builtin pushd "$1" > /dev/null; }
@@ -85,7 +122,7 @@ build() {
     for arch in ${ARCH//,/ }
     do
         echo "Building for $arch"
-        rm -rf "$ipk_work_base/$arch/"
+        rm -rf "${ipk_work_base:?}/${arch:?}/"
         ipk_work="$ipk_work_base/$arch/"
         buildGoCombined
         makePackage
@@ -161,6 +198,7 @@ updateRepo() {
     fi
     utils_dir="$(pwd)/opkg-utils"
     pushd "$output"
+    echo "$BRANCH" > "version.txt"
     rm -f Packages Packages.gz
     "$utils_dir/opkg-make-index" -a -f -v --checksum sha256 -v . > Packages
     echo "===== Repo Packages ====="
@@ -170,6 +208,16 @@ updateRepo() {
     popd
 }
 
+# check if there is a new version
+new_version="${BRANCH:1}"
+comp=0
+vercomp "$new_version" "$current_version" || comp=$?
+if [ $comp -eq 1 ]; then
+    echo "Upgrading from $current_version -> $new_version"
+else
+    echo "current version $current_version is already newer than latest version: $new_version"
+    exit 0;
+fi
 
 echo "==== Building tailscale $BRANCH for $ARCH"
 
