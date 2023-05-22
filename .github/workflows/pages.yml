@@ -45,7 +45,7 @@ jobs:
           go-version: '>=1.20.0'
       
       - name: Build IPK files
-        run: ./build.sh
+        run: ./build.sh "${{ github.event_name }}""
 
        # Only deploy if new version
       - name: Check new package existence

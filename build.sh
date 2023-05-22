@@ -134,6 +134,10 @@ build() {
 buildGoCombined() {
     echo "===== Building binary for ${arch} ====="
     pushd "$code"
+    if [ "$arch" == "mips" ]; then
+        # fix illigal instruction for mips
+        export GOMIPS=softfloat
+    fi
     GOOS=linux GOARCH="$arch" go build -o "tailscale.${arch}.combined" -tags ts_include_cli -ldflags="-s -w" ./cmd/tailscaled
     popd
 }
@@ -216,9 +220,27 @@ comp=0
 vercomp "$new_version" "$current_version" || comp=$?
 if [ $comp -eq 1 ]; then
     echo "Upgrading from $current_version -> $new_version"
+elif [ $# -eq 1 ] ; then
+    echo "command: $1"
+
+    case $1 in
+    force | push | workflow_dispatch)
+        echo "force updating"
+        ;;
+
+    cron | schedule)
+        echo "current version $current_version is already >= than latest version: $new_version"
+        exit 0
+        ;;
+
+    *)
+        echo "unknown command"
+        exit 1
+        ;;
+    esac
 else
     echo "current version $current_version is already >= than latest version: $new_version"
-    exit 0;
+    exit 0
 fi
 
 echo "==== Building tailscale $BRANCH for $ARCH"
