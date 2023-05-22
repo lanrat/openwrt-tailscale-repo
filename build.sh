@@ -134,6 +134,7 @@ build() {
 buildGoCombined() {
     echo "===== Building binary for ${arch} ====="
     pushd "$code"
+    export GOMIPS=
     if [ "$arch" == "mips" ]; then
         # fix illigal instruction for mips
         export GOMIPS=softfloat
