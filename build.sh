@@ -8,7 +8,7 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 # comma separeted
 OPENWRT_ARCH=mips_24kc,mipsel_24kc,arm_cortex-a7,aarch64_generic,mips_siflower
 
-# map openwrt arch to golang GOARCHG and other enviroment variables
+# map openwrt arch to golang GOARCH and other enviroment variables
 declare -A ARCH_GO_ENV=( \
     ["mips_24kc"]="GOARCH=mips GOMIPS=softfloat" \
     ["mipsel_24kc"]="GOARCH=mipsle" \
@@ -156,7 +156,6 @@ makeControl() {
 
 makePackage() {
     version="$(cat $code/VERSION.txt)"
-    #opkg_arch="$(opkgArch "$arch")"
     echo "===== Building Package for $version $arch ====="
     cp -r "$SCRIPT_DIR/ipk/" "$ipk_work"
     mkdir -p "$output"
