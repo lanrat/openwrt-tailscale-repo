@@ -2,17 +2,25 @@
 set -e
 set -uo pipefail
 trap 's=$?; echo ": Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 #set -x
 
 # comma separeted
-DEFAULT_ARCH=mips,mipsle,arm,arm64
+OPENWRT_ARCH=mips_24kc,mipsel_24kc,arm_cortex-a7,aarch64_generic,mips_siflower
 
-: "${ARCH:=$DEFAULT_ARCH}"
+# map openwrt arch to golang GOARCHG and other enviroment variables
+declare -A ARCH_GO_ENV=( \
+    ["mips_24kc"]="GOARCH=mips GOMIPS=softfloat" \
+    ["mipsel_24kc"]="GOARCH=mipsle" \
+    ["arm_cortex-a7"]="GOARCH=arm" \
+    ["aarch64_generic"]="GOARCH=arm64" \
+    ["mips_siflower"]="GOARCH=mipsle GOMIPS=hardfloat" \
+)
+
+: "${ARCH:=$OPENWRT_ARCH}"
 : "${BRANCH:=}"
 : "${PATCH:=true}"
 
-
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 if [ -z "$BRANCH" ]; then
     echo "Branch unset, checking for latest release..."
@@ -80,20 +88,6 @@ cleanAll() {
     clean
 }
 
-# map golang arch to opkg arch
-opkgArch() {
-    goArch="$1"
-    if [ -z "$goArch" ]; then
-        return
-    fi
-    declare -A archMap=( \
-        ["mips"]="mips_24kc" \
-        ["mipsle"]="mipsel_24kc" \
-        ["arm"]="arm_cortex-a7" \
-        ["arm64"]="aarch64_generic" \
-        )
-    echo "${archMap["${goArch}"]:-${goArch}}"
-}
 
 getSource() {
     echo "===== Cloning source for $BRANCH ====="
@@ -132,14 +126,10 @@ build() {
 }
 
 buildGoCombined() {
-    echo "===== Building binary for ${arch} ====="
+    envs="${ARCH_GO_ENV["${arch}"]:-${arch}}"
+    echo "===== Building binary for ${arch} ($envs)  ====="
     pushd "$code"
-    export GOMIPS=
-    if [ "$arch" == "mips" ]; then
-        # fix illigal instruction for mips
-        export GOMIPS=softfloat
-    fi
-    GOOS=linux GOARCH="$arch" go build -o "tailscale.${arch}.combined" -tags ts_include_cli -trimpath -ldflags="-s -w" ./cmd/tailscaled
+    (export $envs && GOOS=linux go build -o "tailscale.${arch}.combined" -tags ts_include_cli -trimpath -ldflags="-s -w" ./cmd/tailscaled)
     popd
 }
 
@@ -159,15 +149,15 @@ makeControl() {
     echo "Section: net"
     echo "SourceDateEpoch: $sourceDateEpoch"
     #echo "Maintainer: NAME <EMAIL>"
-    echo "Architecture: $opkg_arch"
+    echo "Architecture: $arch"
     echo "Installed-Size:$size"
     echo "Description: Creates a secure network between your servers, computers, and cloud instances. Even when separated by firewalls or subnets. This package combines both the tailscaled daemon and tailscale CLI utility in a single combined (multicall) executable."
 }
 
 makePackage() {
     version="$(cat $code/VERSION.txt)"
-    opkg_arch="$(opkgArch "$arch")"
-    echo "===== Building Package for $version $arch ($opkg_arch) ====="
+    #opkg_arch="$(opkgArch "$arch")"
+    echo "===== Building Package for $version $arch ====="
     cp -r "$SCRIPT_DIR/ipk/" "$ipk_work"
     mkdir -p "$output"
 
@@ -191,7 +181,7 @@ makePackage() {
 
     # package
     pkg_out="$(pwd)/$output"
-    pkg_file="tailscale_${version}_${opkg_arch}.ipk"
+    pkg_file="tailscale_${version}_${arch}.ipk"
     pushd "$ipk_work/"
     tar  $tar_options -czf "$pkg_out/$pkg_file" ./debian-binary ./data.tar.gz ./control.tar.gz 
     popd
