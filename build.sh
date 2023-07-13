@@ -139,7 +139,7 @@ buildGoCombined() {
         # fix illigal instruction for mips
         export GOMIPS=softfloat
     fi
-    GOOS=linux GOARCH="$arch" go build -o "tailscale.${arch}.combined" -tags ts_include_cli -ldflags="-s -w" ./cmd/tailscaled
+    GOOS=linux GOARCH="$arch" go build -o "tailscale.${arch}.combined" -tags ts_include_cli -trimpath -ldflags="-s -w" ./cmd/tailscaled
     popd
 }
 
