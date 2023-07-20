@@ -5,9 +5,6 @@ trap 's=$?; echo ": Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 #set -x
 
-# comma separeted
-OPENWRT_ARCH=mips_24kc,mipsel_24kc,arm_cortex-a7,aarch64_generic,mips_siflower
-
 # map openwrt arch to golang GOARCH and other enviroment variables
 declare -A ARCH_GO_ENV=( \
     ["mips_24kc"]="GOARCH=mips GOMIPS=softfloat" \
@@ -17,7 +14,8 @@ declare -A ARCH_GO_ENV=( \
     ["mips_siflower"]="GOARCH=mipsle GOMIPS=hardfloat" \
 )
 
-: "${ARCH:=$OPENWRT_ARCH}"
+# ARCH is a comma separated list of openwrt arch to build
+: "${ARCH:="$(echo "${!ARCH_GO_ENV[@]}" | tr ' ' ',')"}"
 : "${BRANCH:=}"
 : "${PATCH:=true}"
 
@@ -118,6 +116,10 @@ build() {
     for arch in ${ARCH//,/ }
     do
         echo "Building for $arch"
+        if [ ! -v 'ARCH_GO_ENV[${arch}]' ];then
+            echo "ERROR: arch $arch not defined in ARCH_GO_ENV!"
+            exit 2
+        fi
         rm -rf "${ipk_work_base:?}/${arch:?}/"
         ipk_work="$ipk_work_base/$arch/"
         buildGoCombined
