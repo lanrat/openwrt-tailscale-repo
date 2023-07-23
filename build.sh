@@ -6,6 +6,7 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 #set -x
 
 # map openwrt arch to golang GOARCH and other enviroment variables
+# GOMIPS: https://github.com/openwrt/packages/blob/openwrt-22.03/lang/golang/golang-values.mk#L175
 declare -A ARCH_GO_ENV=( \
     ["mips_24kc"]="GOARCH=mips GOMIPS=softfloat" \
     ["mipsel_24kc"]="GOARCH=mipsle" \
