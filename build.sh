@@ -9,7 +9,7 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 # GOMIPS: https://github.com/openwrt/packages/blob/openwrt-22.03/lang/golang/golang-values.mk#L175
 declare -A ARCH_GO_ENV=( \
     ["mips_24kc"]="GOARCH=mips GOMIPS=softfloat" \
-    ["mipsel_24kc"]="GOARCH=mipsle" \
+    ["mipsel_24kc"]="GOARCH=mipsle GOMIPS=softfloat" \
     ["arm_cortex-a7"]="GOARCH=arm" \
     ["aarch64_generic"]="GOARCH=arm64" \
     ["mips_siflower"]="GOARCH=mipsle GOMIPS=hardfloat" \
