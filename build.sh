@@ -23,7 +23,7 @@ declare -A ARCH_GO_ENV=( \
 
 if [ -z "$BRANCH" ]; then
     echo "Branch unset, checking for latest release..."
-    BRANCH="$(curl -s https://api.github.com/repos/tailscale/tailscale/releases/latest  | grep tag_name | cut -d \" -f4)"
+    BRANCH="$(curl -s https://api.github.com/repos/tailscale/tailscale/releases/latest | jq -r .tag_name)"
     echo "Latest release is $BRANCH"
 fi
 
