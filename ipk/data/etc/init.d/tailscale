@@ -40,3 +40,14 @@ start_service() {
 stop_service() {
   /usr/sbin/tailscaled --cleanup
 }
+
+reload_service() {
+  echo "Restarting tailscale"
+  sleep 3
+  stop
+  start
+}
+
+service_triggers() {
+  procd_add_reload_trigger "mwan3"
+}
