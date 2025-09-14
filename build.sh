@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-set -e
-set -uo pipefail
-trap 's=$?; echo ": Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
+set -eu
+set -o pipefail
+if [[ "${TRACE-0}" == "1" ]]; then set -o xtrace; fi
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 #set -x
 
-# map openwrt arch to golang GOARCH and other enviroment variables
+# map openwrt arch to golang GOARCH and other environment variables
 # GOMIPS: https://github.com/openwrt/packages/blob/openwrt-22.03/lang/golang/golang-values.mk#L175
 declare -A ARCH_GO_ENV=( \
     ["mips_24kc"]="GOARCH=mips GOMIPS=softfloat" \
@@ -40,12 +40,12 @@ current_version="${current_version:1}" # remove leading v
 # semver comparison
 # source: https://stackoverflow.com/questions/4023830/how-to-compare-two-strings-in-dot-separated-version-format-in-bash
 vercomp () {
-    if [[ $1 == $2 ]]
+    if [[ "$1" == "$2" ]]
     then
         return 0
     fi
     local IFS=.
-    local i ver1=($1) ver2=($2)
+    local i ver1=("$1") ver2=("$2")
     # fill empty fields in ver1 with zeros
     for ((i=${#ver1[@]}; i<${#ver2[@]}; i++))
     do
@@ -132,6 +132,8 @@ buildGoCombined() {
     envs="${ARCH_GO_ENV["${arch}"]:-${arch}}"
     echo "===== Building binary for ${arch} ($envs)  ====="
     pushd "$code"
+    # shellcheck disable=SC2163
+    # shellcheck disable=SC2086
     (export $envs && GOOS=linux go build -o "tailscale.${arch}.combined" -tags ts_include_cli -trimpath -ldflags="-s -w" ./cmd/tailscaled)
     popd
 }
@@ -172,12 +174,14 @@ makePackage() {
     mkdir -p "$ipk_work/data/usr/sbin"
     cp "$code/tailscale.${arch}.combined" "$ipk_work/data/usr/sbin/tailscaled"
     pushd "$ipk_work/data/"
+    # shellcheck disable=SC2086
     tar $tar_options -czf "../data.tar.gz" ./*
     popd
 
     # control
     makeControl > "$ipk_work/control/control"
     pushd "$ipk_work/control/"
+    # shellcheck disable=SC2086
     tar  $tar_options -czf "../control.tar.gz" ./*
     popd
 
@@ -185,6 +189,7 @@ makePackage() {
     pkg_out="$(pwd)/$output"
     pkg_file="tailscale_${version}_${arch}.ipk"
     pushd "$ipk_work/"
+    # shellcheck disable=SC2086
     tar  $tar_options -czf "$pkg_out/$pkg_file" ./debian-binary ./data.tar.gz ./control.tar.gz 
     popd
     echo "created $pkg_file"

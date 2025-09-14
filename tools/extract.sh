@@ -1,4 +1,4 @@
-#1/usr/bin/env bash
+#!/usr/bin/env bash
 
 if [ $# -eq 0 ]; then
     echo "No arguments provided"
@@ -9,7 +9,7 @@ ipk="$1"
 
 name=${ipk%.*}
 
-echo $name
+echo "$name"
 mkdir -p "$name"
 tar -C "$name" -xvzf "$ipk"
 

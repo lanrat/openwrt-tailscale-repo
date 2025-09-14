@@ -1,0 +1,33 @@
+{
+    "version": "0.2",
+    "ignorePaths": [],
+    "dictionaryDefinitions": [],
+    "dictionaries": [],
+    "words": [
+        "andstor",
+        "GOARCH",
+        "GOMIPS",
+        "hardfloat",
+        "kmod",
+        "ldflags",
+        "libc",
+        "libustream",
+        "mipsel",
+        "mipsle",
+        "multicall",
+        "mwan",
+        "numstat",
+        "openwrt",
+        "opkg",
+        "peaceiris",
+        "siflower",
+        "softfloat",
+        "stylesheet",
+        "tailscaled",
+        "trimpath",
+        "vercomp",
+        "yoctoproject"
+    ],
+    "ignoreWords": [],
+    "import": []
+}
