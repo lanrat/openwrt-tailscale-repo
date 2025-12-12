@@ -42,10 +42,9 @@ stop_service() {
 }
 
 reload_service() {
-  echo "Restarting tailscale"
-  sleep 3
-  stop
-  start
+  echo "Reloading tailscale"
+  /usr/sbin/tailscale down --accept-risk all --reason "Service Reload"
+  /usr/sbin/tailscale up
 }
 
 service_triggers() {
