@@ -30,18 +30,24 @@
 
     <p><strong>NOTE:</strong> It is normal for the installation to give an error about a failed log upload after finishing when the service starts.</p>
 
+    <p><strong>NOTE:</strong> This repository does not use package signing. The <code>Packages.sig</code> download failure shown during <code>opkg update</code> is expected and harmless. The <code>option check_signature 0</code> flag in the feed line below suppresses this warning.</p>
+
+    <p><strong>Prerequisites:</strong> HTTPS connections to GitHub require SSL support. Install these packages first if not already present:</p>
+    <pre><code>opkg install ca-bundle ca-certificates libustream-openssl</code></pre>
+
     <h4>Web UI</h4>
 
     <p>Navigate to System -> Software</p>
     <p>Add the following feed to <code>/etc/opkg/customfeeds.conf</code></p>
-    <pre><code>src/gz openwrt-tailscale https://lanrat.github.io/openwrt-tailscale-repo/packages/19.07</code></pre>
+    <pre><code>src/gz openwrt-tailscale https://lanrat.github.io/openwrt-tailscale-repo/packages/19.07 option check_signature 0</code></pre>
 
     <p>Update the feeds</p>
 
     <p>Search for tailscale, and install it.</p>
 
     <h4>CLI</h4>
-<pre><code>echo "src/gz openwrt-tailscale https://lanrat.github.io/openwrt-tailscale-repo/packages/19.07" >> "/etc/opkg/customfeeds.conf"
+<pre><code>opkg install ca-bundle ca-certificates libustream-openssl
+echo "src/gz openwrt-tailscale https://lanrat.github.io/openwrt-tailscale-repo/packages/19.07 option check_signature 0" >> "/etc/opkg/customfeeds.conf"
 opkg update
 opkg install tailscale</code></pre>
 
@@ -51,14 +57,11 @@ opkg install tailscale</code></pre>
     <p>After installation tailscaled should already be running and waiting for you to login and configure it.</p>
 
     <p>For example:</p>
-
     <pre><code>tailscale up --accept-dns=false --advertise-routes=10.0.0.0/24 --advertise-exit-node</code></pre>
-
 
     <h3>What about OpenWrt 21.02+?</h3>
 
     <p>Tailscale is already in the <a target="_blank" href="https://openwrt.org/packages/pkgdata/tailscale">default feeds</a> for newer versions of OpenWrt.</p>
-
   </main>
 
   <footer>
