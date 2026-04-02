@@ -12,7 +12,7 @@ declare -A ARCH_GO_ENV=( \
     ["mipsel_24kc"]="GOARCH=mipsle GOMIPS=softfloat" \
     ["arm_cortex-a7"]="GOARCH=arm" \
     ["aarch64_generic"]="GOARCH=arm64" \
-    ["mips_siflower"]="GOARCH=mipsle GOMIPS=hardfloat" \
+    ["mips_siflower"]="GOARCH=mipsle GOMIPS=softfloat" \
 )
 
 # ARCH is a comma separated list of openwrt arch to build
