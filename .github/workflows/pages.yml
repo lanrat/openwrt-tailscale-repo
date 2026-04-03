@@ -1,8 +1,7 @@
-# Simple workflow for deploying static content to GitHub Pages
+# Workflow for building and deploying the opkg repo to GitHub Pages
 name: build and update repo
 
 on:
-  # Runs on pushes targeting the default branch
   push:
     branches: ["main"]
 
@@ -10,62 +9,55 @@ on:
     # Runs "At 06:30 on Tuesday." (see https://crontab.guru)
     - cron: '30 6 * * 2'
 
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# Allow one concurrent deployment
 concurrency:
   group: "pages"
   cancel-in-progress: true
 
 jobs:
-  # Single deploy job since we're just deploying
   deploy:
     environment:
       name: github-pages
-    runs-on: ubuntu-22.04
-    permissions:
-      contents: write
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
         with:
-          #go-version-file: go.mod
           go-version: 'stable'
-      
+
       - name: Build IPK files
         run: ./build.sh "${{ github.event_name }}"
 
-       # Only deploy if new version
       - name: Check new package existence
         id: check_files
-        uses: andstor/file-existence-action@v2
+        uses: andstor/file-existence-action@v3
         with:
           files: "packages/19.07/Packages"
-      
+
       - name: Prep GH Pages Directory
         if: ${{ (github.ref == 'refs/heads/main') && (steps.check_files.outputs.files_exists == 'true') }}
         run: |
           cp -r ./html ./gh_pages
           mv ./packages/ gh_pages/packages/
           ./tools/gen_directory_listing.sh ./gh_pages/packages/19.07/
-      
-      - name: Deploy
-        uses: peaceiris/actions-gh-pages@v3
+
+      - name: Upload Pages artifact
         if: ${{ (github.ref == 'refs/heads/main') && (steps.check_files.outputs.files_exists == 'true') }}
+        uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./gh_pages
-          force_orphan: true # do not keep history
-      
+          path: ./gh_pages
+
+      - name: Deploy to GitHub Pages
+        if: ${{ (github.ref == 'refs/heads/main') && (steps.check_files.outputs.files_exists == 'true') }}
+        id: deployment
+        uses: actions/deploy-pages@v4
