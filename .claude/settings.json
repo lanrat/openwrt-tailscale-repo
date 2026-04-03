@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh issue:*)",
+      "Bash(gh pr:*)",
+      "Bash(gh run:*)",
+      "Bash(gh api:*)",
+      "Bash(unzip -o /tmp/logs.zip -d /tmp/logs)",
+      "Read(//tmp/**)"
+    ]
+  }
+}
