@@ -1,6 +1,6 @@
 # [Tailscale Builder for OpenWrt](https://lanrat.github.io/openwrt-tailscale-repo)
 
-Builds Tailscale combined ipk packages for OpenWrt.
+Builds Tailscale combined ipk packages for OpenWrt, compressed with [UPX](https://upx.github.io/) for smaller package sizes.
 
 For information on how to use this, see: [lanrat.github.io/openwrt-tailscale-repo](https://lanrat.github.io/openwrt-tailscale-repo).
 

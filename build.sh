@@ -135,6 +135,11 @@ buildGoCombined() {
     # shellcheck disable=SC2163
     # shellcheck disable=SC2086
     (export $envs && GOOS=linux go build -o "tailscale.${arch}.combined" -tags ts_include_cli -trimpath -ldflags="-s -w" ./cmd/tailscaled)
+    if command -v upx &> /dev/null; then
+        upx --lzma --best "tailscale.${arch}.combined"
+    else
+        echo "upx not found, skipping compression"
+    fi
     popd
 }
 

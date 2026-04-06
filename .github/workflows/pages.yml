@@ -35,6 +35,9 @@ jobs:
         with:
           go-version: 'stable'
 
+      - name: Install UPX
+        run: sudo apt-get install -yqq upx
+
       - name: Build IPK files
         run: ./build.sh "${{ github.event_name }}"
 
