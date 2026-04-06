@@ -3,4 +3,5 @@ tailscale/
 ipk-work/
 packages/
 opkg-utils/
+keys/*.sec
 

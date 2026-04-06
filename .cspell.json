@@ -8,6 +8,7 @@
         "GOARCH",
         "GOMIPS",
         "hardfloat",
+        "Keypair",
         "kmod",
         "ldflags",
         "libc",
@@ -25,6 +26,7 @@
         "stylesheet",
         "tailscaled",
         "trimpath",
+        "usign",
         "vercomp",
         "yoctoproject"
     ],

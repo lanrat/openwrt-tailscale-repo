@@ -30,7 +30,11 @@
 
     <p><strong>NOTE:</strong> It is normal for the installation to give an error about a failed log upload after finishing when the service starts.</p>
 
-    <p><strong>NOTE:</strong> This repository does not use package signing. The <code>Packages.sig</code> download failure shown during <code>opkg update</code> is expected and harmless. The <code>option check_signature 0</code> flag in the feed line below suppresses this warning.</p>
+    <p><strong>NOTE:</strong> This repository signs its package index. For signature verification, add the signing key before updating feeds:</p>
+    <pre><code>wget -O /tmp/openwrt-tailscale.pub https://lanrat.github.io/openwrt-tailscale-repo/keys/public.pub
+opkg-key add /tmp/openwrt-tailscale.pub
+rm /tmp/openwrt-tailscale.pub</code></pre>
+    <p>If you prefer to skip signature verification, you can use <code>option check_signature 0</code> in your feed line instead (see <a href="#legacy">legacy instructions</a> below).</p>
 
     <p><strong>Prerequisites:</strong> HTTPS connections to GitHub require SSL support. Install these packages first if not already present:</p>
     <pre><code>opkg install ca-bundle ca-certificates libustream-openssl</code></pre>
@@ -39,7 +43,7 @@
 
     <p>Navigate to System -> Software</p>
     <p>Add the following feed to <code>/etc/opkg/customfeeds.conf</code></p>
-    <pre><code>src/gz openwrt-tailscale https://lanrat.github.io/openwrt-tailscale-repo/packages/19.07 option check_signature 0</code></pre>
+    <pre><code>src/gz openwrt-tailscale https://lanrat.github.io/openwrt-tailscale-repo/packages/19.07</code></pre>
 
     <p>Update the feeds</p>
 
@@ -47,10 +51,16 @@
 
     <h4>CLI</h4>
 <pre><code>opkg install ca-bundle ca-certificates libustream-openssl
-echo "src/gz openwrt-tailscale https://lanrat.github.io/openwrt-tailscale-repo/packages/19.07 option check_signature 0" >> "/etc/opkg/customfeeds.conf"
+wget -O /tmp/openwrt-tailscale.pub https://lanrat.github.io/openwrt-tailscale-repo/keys/public.pub
+opkg-key add /tmp/openwrt-tailscale.pub
+rm /tmp/openwrt-tailscale.pub
+echo "src/gz openwrt-tailscale https://lanrat.github.io/openwrt-tailscale-repo/packages/19.07" >> "/etc/opkg/customfeeds.conf"
 opkg update
 opkg install tailscale</code></pre>
 
+    <h4 id="legacy">Without signature verification (legacy)</h4>
+    <p>If your router does not support <code>opkg-key</code> or you prefer not to verify signatures:</p>
+<pre><code>echo "src/gz openwrt-tailscale https://lanrat.github.io/openwrt-tailscale-repo/packages/19.07 option check_signature 0" >> "/etc/opkg/customfeeds.conf"</code></pre>
 
     <h3>Configuration</h3>
 

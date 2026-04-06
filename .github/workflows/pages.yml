@@ -38,6 +38,17 @@ jobs:
       - name: Build IPK files
         run: ./build.sh "${{ github.event_name }}"
 
+      - name: Sign Packages index
+        if: ${{ env.SIGNING_KEY != '' }}
+        env:
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+        run: |
+          sudo apt-get install -yqq signify-openbsd
+          TMPKEY=$(mktemp)
+          echo "$SIGNING_KEY" > "$TMPKEY"
+          signify-openbsd -S -s "$TMPKEY" -m packages/19.07/Packages -x packages/19.07/Packages.sig
+          rm -f "$TMPKEY"
+
       - name: Check new package existence
         id: check_files
         uses: andstor/file-existence-action@v3
@@ -49,6 +60,7 @@ jobs:
         run: |
           cp -r ./html ./gh_pages
           mv ./packages/ gh_pages/packages/
+          cp -r ./keys gh_pages/keys
           ./tools/gen_directory_listing.sh ./gh_pages/packages/19.07/
 
       - name: Upload Pages artifact
