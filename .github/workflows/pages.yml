@@ -44,10 +44,10 @@ jobs:
           SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
         run: |
           sudo apt-get install -yqq signify-openbsd
-          TMPKEY=$(mktemp)
-          echo "$SIGNING_KEY" > "$TMPKEY"
-          signify-openbsd -S -s "$TMPKEY" -m packages/19.07/Packages -x packages/19.07/Packages.sig
-          rm -f "$TMPKEY"
+          TMPDIR=$(mktemp -d)
+          echo "$SIGNING_KEY" > "$TMPDIR/key.sec"
+          signify-openbsd -S -s "$TMPDIR/key.sec" -m packages/19.07/Packages -x packages/19.07/Packages.sig
+          rm -rf "$TMPDIR"
 
       - name: Check new package existence
         id: check_files
