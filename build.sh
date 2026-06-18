@@ -17,7 +17,6 @@ declare -A ARCH_GO_ENV=( \
 
 # ARCH is a comma separated list of openwrt arch to build
 : "${ARCH:="$(echo "${!ARCH_GO_ENV[@]}" | tr ' ' ',')"}"
-: "${BRANCH:=}"
 : "${PATCH:=true}"
 
 # Pin the Go toolchain to the latest 1.25.x.
@@ -26,8 +25,18 @@ declare -A ARCH_GO_ENV=( \
 # older kernels common on OpenWrt devices (e.g. mips_siflower / GL-SFT1200 on
 # kernel 4.14) these return ENOSYS and the runtime crashes at startup with a
 # SIGSEGV. See issue #12 and https://github.com/golang/go/issues/77730.
-# Revisit once Go 1.27 ships the upstream fix.
+# Set GO_VERSION="" to disable pinning. Revisit once Go 1.27 ships the fix.
 : "${GO_VERSION:=go1.25.11}"
+
+# Tailscale version to build (empty = latest release). While GO_VERSION pins an
+# older toolchain, newer Tailscale releases pull in modules that require
+# Go >= 1.26 (e.g. tailscale/gliderssh), so they cannot build with the pinned
+# toolchain. Pin to the last release that still builds with it. Remove this pin
+# together with GO_VERSION once Go 1.27 (with the golang/go#77730 fix) is used.
+if [ -n "$GO_VERSION" ]; then
+    : "${BRANCH:=v1.96.4}"
+fi
+: "${BRANCH:=}"
 
 
 if [ -z "$BRANCH" ]; then
