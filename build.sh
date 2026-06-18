@@ -33,10 +33,17 @@ declare -A ARCH_GO_ENV=( \
 # Go >= 1.26 (e.g. tailscale/gliderssh), so they cannot build with the pinned
 # toolchain. Pin to the last release that still builds with it. Remove this pin
 # together with GO_VERSION once Go 1.27 (with the golang/go#77730 fix) is used.
+#
+# PKG_RELEASE: optional package revision suffix (Version: <ver>-<rel>). The
+# pinned version was already published built with the broken toolchain, so bump
+# the revision to make opkg offer the fixed rebuild as an upgrade even though
+# the upstream version is unchanged. Cleared automatically when GO_VERSION is.
 if [ -n "$GO_VERSION" ]; then
     : "${BRANCH:=v1.96.4}"
+    : "${PKG_RELEASE:=2}"
 fi
 : "${BRANCH:=}"
+: "${PKG_RELEASE:=}"
 
 
 if [ -z "$BRANCH" ]; then
@@ -189,8 +196,13 @@ makeControl() {
     sourceDateEpoch="$(git -C $code show -s --format=%ct)"
     size="$(wc -c <"$ipk_work/data.tar.gz")"
 
+    pkg_version="$version"
+    if [ -n "$PKG_RELEASE" ]; then
+        pkg_version="${version}-${PKG_RELEASE}"
+    fi
+
     echo "Package: tailscale"
-    echo "Version: $version"
+    echo "Version: $pkg_version"
     echo "Depends: libc, libustream-openssl, ca-bundle, kmod-tun"
     echo "Provides: tailscale tailscaled"
     echo "Conflicts: tailscaled"
