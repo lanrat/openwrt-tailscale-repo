@@ -26,6 +26,7 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -34,6 +35,22 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version: 'stable'
+          # tailscale is cloned at build time, so there is no go.sum at the repo
+          # root for setup-go's default caching to key on; cache explicitly.
+          cache: false
+
+      - name: Cache Go modules and build cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          # The tailscale version is resolved inside build.sh and is unknown
+          # here, so use a unique save key per run and restore the most recent
+          # prior cache; this keeps modules/build cache fresh across versions.
+          key: ${{ runner.os }}-go-${{ github.run_id }}
+          restore-keys: |
+            ${{ runner.os }}-go-
 
       - name: Install UPX
         run: sudo apt-get install -yqq upx

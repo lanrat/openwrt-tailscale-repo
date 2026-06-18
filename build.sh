@@ -48,8 +48,12 @@ fi
 
 if [ -z "$BRANCH" ]; then
     echo "Branch unset, checking for latest release..."
-    BRANCH="$(curl -s https://api.github.com/repos/tailscale/tailscale/releases/latest | jq -r .tag_name)"
+    BRANCH="$(curl -s --fail https://api.github.com/repos/tailscale/tailscale/releases/latest | jq -r .tag_name)"
     echo "Latest release is $BRANCH"
+    if [ -z "$BRANCH" ] || [ "$BRANCH" = "null" ]; then
+        echo "ERROR: failed to resolve latest tailscale release" >&2
+        exit 1
+    fi
 fi
 
 
@@ -101,7 +105,7 @@ popd() { builtin popd > /dev/null; }
 
 clean() {
     echo "===== Cleaning env ====="
-    rm -f "$code/tailscale.*.combined"
+    rm -f "$code"/tailscale.*.combined
     rm -rf "$ipk_work_base"
 }
 
@@ -183,7 +187,7 @@ buildGoCombined() {
     go_toolchain="${GO_VERSION:-auto}"
     # shellcheck disable=SC2163
     # shellcheck disable=SC2086
-    (export $envs && GOTOOLCHAIN="$go_toolchain" GOOS=linux go build -o "tailscale.${arch}.combined" -tags ts_include_cli -trimpath -ldflags="-s -w" ./cmd/tailscaled)
+    (export $envs && CGO_ENABLED=0 GOTOOLCHAIN="$go_toolchain" GOOS=linux go build -o "tailscale.${arch}.combined" -tags ts_include_cli -trimpath -ldflags="-s -w" ./cmd/tailscaled)
     if command -v upx &> /dev/null; then
         upx --lzma --best "tailscale.${arch}.combined"
     else
@@ -267,7 +271,7 @@ updateRepo() {
     echo "===== Repo Packages ====="
     cat Packages
     echo "========================"
-    gzip --keep Packages
+    gzip -n --keep Packages
     popd
 }
 
