@@ -257,7 +257,7 @@ makePackage() {
 updateRepo() {
     echo "===== UPDATING REPO ====="
     if [ ! -d "opkg-utils" ]; then
-        git clone --depth 1 "git://git.yoctoproject.org/opkg-utils"
+        git clone --depth 1 "https://git.yoctoproject.org/opkg-utils"
     fi
     utils_dir="$(pwd)/opkg-utils"
     pushd "$output"
