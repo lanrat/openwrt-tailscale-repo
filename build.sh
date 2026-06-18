@@ -20,6 +20,15 @@ declare -A ARCH_GO_ENV=( \
 : "${BRANCH:=}"
 : "${PATCH:=true}"
 
+# Pin the Go toolchain to the latest 1.25.x.
+# Go 1.26 made the 32-bit linux runtime call the time64 syscalls
+# (futex_time64/timer_settime64), which were only added in Linux 5.1. On the
+# older kernels common on OpenWrt devices (e.g. mips_siflower / GL-SFT1200 on
+# kernel 4.14) these return ENOSYS and the runtime crashes at startup with a
+# SIGSEGV. See issue #12 and https://github.com/golang/go/issues/77730.
+# Revisit once Go 1.27 ships the upstream fix.
+: "${GO_VERSION:=go1.25.11}"
+
 
 if [ -z "$BRANCH" ]; then
     echo "Branch unset, checking for latest release..."
@@ -98,9 +107,31 @@ getSource() {
     # git -C "$code" pull --tags
     # git -C "$code" checkout "$BRANCH"
 
+    pinGoVersion
+
     if [ "$PATCH" = true ] ; then
         patchSource
     fi
+}
+
+# Lower the go.mod "go" directive (and drop any "toolchain" line) so the pinned
+# older toolchain in $GO_VERSION is accepted. Without this the toolchain refuses
+# to build because go.mod requires a newer Go than $GO_VERSION. See the
+# $GO_VERSION comment above for why we pin an older toolchain.
+# If $GO_VERSION is empty, pinning is disabled and the default/latest Go is used.
+pinGoVersion() {
+    if [ -z "$GO_VERSION" ]; then
+        echo "===== GO_VERSION unset, using default/latest Go toolchain ====="
+        return
+    fi
+    echo "===== Pinning Go toolchain to $GO_VERSION ====="
+    go_directive="${GO_VERSION#go}"
+    sed -i.bak -E \
+        -e "s/^go [0-9]+\.[0-9]+(\.[0-9]+)?$/go ${go_directive}/" \
+        -e "/^toolchain /d" \
+        "$code/go.mod"
+    rm -f "$code/go.mod.bak"
+    grep -E "^(go|toolchain) " "$code/go.mod"
 }
 
 # patch tailscale to not conflict with mwan3
@@ -132,9 +163,11 @@ buildGoCombined() {
     envs="${ARCH_GO_ENV["${arch}"]:-${arch}}"
     echo "===== Building binary for ${arch} ($envs)  ====="
     pushd "$code"
+    # Force the pinned toolchain when GO_VERSION is set; otherwise let go pick the default.
+    go_toolchain="${GO_VERSION:-auto}"
     # shellcheck disable=SC2163
     # shellcheck disable=SC2086
-    (export $envs && GOOS=linux go build -o "tailscale.${arch}.combined" -tags ts_include_cli -trimpath -ldflags="-s -w" ./cmd/tailscaled)
+    (export $envs && GOTOOLCHAIN="$go_toolchain" GOOS=linux go build -o "tailscale.${arch}.combined" -tags ts_include_cli -trimpath -ldflags="-s -w" ./cmd/tailscaled)
     if command -v upx &> /dev/null; then
         upx --lzma --best "tailscale.${arch}.combined"
     else
