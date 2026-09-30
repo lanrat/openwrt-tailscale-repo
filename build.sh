@@ -19,30 +19,23 @@ declare -A ARCH_GO_ENV=( \
 : "${ARCH:="$(echo "${!ARCH_GO_ENV[@]}" | tr ' ' ',')"}"
 : "${PATCH:=true}"
 
-# Pin the Go toolchain to the latest 1.25.x.
-# Go 1.26 made the 32-bit linux runtime call the time64 syscalls
-# (futex_time64/timer_settime64), which were only added in Linux 5.1. On the
-# older kernels common on OpenWrt devices (e.g. mips_siflower / GL-SFT1200 on
-# kernel 4.14) these return ENOSYS and the runtime crashes at startup with a
-# SIGSEGV. See issue #12 and https://github.com/golang/go/issues/77730.
-# Set GO_VERSION="" to disable pinning. Revisit once Go 1.27 ships the fix.
-: "${GO_VERSION:=go1.25.11}"
+# Minimum Go toolchain allowed to build. Go 1.26 made the 32-bit linux runtime
+# call the time64 syscalls (futex_time64/timer_settime64), which were only added
+# in Linux 5.1. On the older kernels common on OpenWrt devices (e.g.
+# mips_siflower / GL-SFT1200 on kernel 4.14) these return ENOSYS and the runtime
+# crashes at startup with a SIGSEGV. Go 1.27 falls back to the old syscalls.
+# See issue #12 and https://github.com/golang/go/issues/77730.
+: "${MIN_GO_VERSION:=1.27}"
 
-# Tailscale version to build (empty = latest release). While GO_VERSION pins an
-# older toolchain, newer Tailscale releases pull in modules that require
-# Go >= 1.26 (e.g. tailscale/gliderssh), so they cannot build with the pinned
-# toolchain. Pin to the last release that still builds with it. Remove this pin
-# together with GO_VERSION once Go 1.27 (with the golang/go#77730 fix) is used.
-#
-# PKG_RELEASE: optional package revision suffix (Version: <ver>-<rel>). The
-# pinned version was already published built with the broken toolchain, so bump
-# the revision to make opkg offer the fixed rebuild as an upgrade even though
-# the upstream version is unchanged. Cleared automatically when GO_VERSION is.
-if [ -n "$GO_VERSION" ]; then
-    : "${BRANCH:=v1.96.4}"
-    : "${PKG_RELEASE:=2}"
-fi
+# Optional exact Go toolchain override (e.g. go1.27.1). Empty = use whatever
+# toolchain go selects for Tailscale's go.mod (GOTOOLCHAIN=auto).
+: "${GO_VERSION:=}"
+
+# Tailscale version to build (empty = latest release).
 : "${BRANCH:=}"
+
+# PKG_RELEASE: optional package revision suffix (Version: <ver>-<rel>). Use it to
+# make opkg offer a rebuild of an already published upstream version.
 : "${PKG_RELEASE:=}"
 
 
@@ -73,8 +66,9 @@ vercomp () {
     then
         return 0
     fi
-    local IFS=.
-    local i ver1=("$1") ver2=("$2")
+    local i ver1 ver2
+    IFS=. read -ra ver1 <<< "$1"
+    IFS=. read -ra ver2 <<< "$2"
     # fill empty fields in ver1 with zeros
     for ((i=${#ver1[@]}; i<${#ver2[@]}; i++))
     do
@@ -82,7 +76,7 @@ vercomp () {
     done
     for ((i=0; i<${#ver1[@]}; i++))
     do
-        if [[ -z ${ver2[i]} ]]
+        if [[ -z ${ver2[i]:-} ]]
         then
             # fill empty fields in ver2 with zeros
             ver2[i]=0
@@ -128,20 +122,18 @@ getSource() {
     # git -C "$code" checkout "$BRANCH"
 
     pinGoVersion
+    checkGoVersion
 
     if [ "$PATCH" = true ] ; then
         patchSource
     fi
 }
 
-# Lower the go.mod "go" directive (and drop any "toolchain" line) so the pinned
-# older toolchain in $GO_VERSION is accepted. Without this the toolchain refuses
-# to build because go.mod requires a newer Go than $GO_VERSION. See the
-# $GO_VERSION comment above for why we pin an older toolchain.
-# If $GO_VERSION is empty, pinning is disabled and the default/latest Go is used.
+# Rewrite the go.mod "go" directive (and drop any "toolchain" line) so the exact
+# toolchain in $GO_VERSION is accepted. Only runs when $GO_VERSION is set.
 pinGoVersion() {
     if [ -z "$GO_VERSION" ]; then
-        echo "===== GO_VERSION unset, using default/latest Go toolchain ====="
+        echo "===== GO_VERSION unset, using default Go toolchain for go.mod ====="
         return
     fi
     echo "===== Pinning Go toolchain to $GO_VERSION ====="
@@ -152,6 +144,22 @@ pinGoVersion() {
         "$code/go.mod"
     rm -f "$code/go.mod.bak"
     grep -E "^(go|toolchain) " "$code/go.mod"
+}
+
+# Refuse to build with a toolchain older than $MIN_GO_VERSION. Checks the
+# toolchain go will actually select inside $code, after any go.mod changes.
+checkGoVersion() {
+    local selected
+    selected="$(cd "$code" && GOTOOLCHAIN="${GO_VERSION:-auto}" go env GOVERSION)"
+    selected="${selected#go}"
+    selected="${selected%%[!0-9.]*}" # drop suffixes like "rc1" or " X:..."
+    echo "===== Go toolchain: $selected (minimum $MIN_GO_VERSION) ====="
+    local comp=0
+    vercomp "$selected" "$MIN_GO_VERSION" || comp=$?
+    if [ $comp -eq 2 ]; then
+        echo "ERROR: Go $selected is older than $MIN_GO_VERSION, see issue #12" >&2
+        exit 1
+    fi
 }
 
 # patch tailscale to not conflict with mwan3
